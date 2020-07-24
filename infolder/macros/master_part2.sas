@@ -28,11 +28,12 @@ proc sql;
 CREATE TABLE RCR_T2D_DEMO AS
 (	
 	SELECT DISTINCT DEMO.PATID, DOB AS BIRTH_DATE, DEMO.SEX, HISPANIC, RACE
-	, year(coalesce(C4.INDEX_DATE, C7.INDEX_DATE,C10.INDEX_DATE)) AS STUDY_ENTRY_YEAR
-	, round(yrdif(dob,coalesce(C4.INDEX_DATE, C7.INDEX_DATE,C10.INDEX_DATE),'AGE')) as AGE
+	, year(T1) AS STUDY_ENTRY_YEAR
+	, round(yrdif(dob,T1,'AGE')) as AGE
 	, CASE_TYPE
 	, INCIDENT_DM_FLAG
-	, coalesce(C4.INDEX_DATE, C7.INDEX_DATE,C10.INDEX_DATE) AS INDEX_DATE format=date9.
+	, coalesce(C4.INDEX_DATE, C7.INDEX_DATE, C10.INDEX_DATE) AS INDEX_DATE format=date9.
+	,T1 
 	FROM dmlocal.T1712_SELECTED_CASES_DEMO DEMO
 	LEFT JOIN dmlocal.T1712_RCRT2D_COUNT4 C4 on c4.patid=demo.patid
 	LEFT JOIN dmlocal.T1712_RCRT2D_COUNT7 C7 on c7.patid=demo.patid
@@ -46,7 +47,7 @@ proc sql;
 CREATE table dmtable.DEMO_NUM_IP AS
 (SELECT DEMO.PATID, COUNT(*) AS NUM_INPATIENT_VISITS
 FROM RCR_T2D_DEMO DEMO JOIN indata.ENCOUNTER ENC on demo.patid=enc.patid
-WHERE ENC.ADMIT_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1) AND ENC.ENC_TYPE in ('EI', 'IP')
+WHERE ENC.ADMIT_DATE BETWEEN (T1-365) AND (T1-1) AND ENC.ENC_TYPE in ('EI', 'IP')
 GROUP BY 1
 )
 ;
@@ -59,7 +60,7 @@ proc sql;
 CREATE table dmtable.DEMO_NUM_ED AS
 (SELECT DEMO.PATID, COUNT(*) AS NUM_ED_VISITS
 FROM RCR_T2D_DEMO DEMO JOIN indata.ENCOUNTER ENC on demo.patid=enc.patid
-WHERE ENC.ADMIT_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1) AND ENC.ENC_TYPE = 'ED'
+WHERE ENC.ADMIT_DATE BETWEEN (T1-365) AND (T1-1) AND ENC.ENC_TYPE = 'ED'
 GROUP BY 1
 )
 ;
@@ -72,7 +73,7 @@ proc sql;
 CREATE table dmtable.DEMO_NUM_OP AS
 (SELECT DEMO.PATID, COUNT(*) AS NUM_OUTPATIENT_VISITS
 FROM RCR_T2D_DEMO DEMO JOIN indata.ENCOUNTER ENC on demo.patid=enc.patid
-WHERE ENC.ADMIT_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1) AND ENC.ENC_TYPE ='AV'
+WHERE ENC.ADMIT_DATE BETWEEN (T1-365) AND (T1-1) AND ENC.ENC_TYPE ='AV'
 GROUP BY 1
 )
 ;
@@ -92,7 +93,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&HTN_09.))
 	   OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN(&HTN_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -108,7 +109,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&HTN_09.))
 	   OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&HTN_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -130,7 +131,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&LIPID_DISORDERS_09.))
 	   OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN(&LIPID_DISORDERS_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -146,7 +147,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&LIPID_DISORDERS_09.))
 	   OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&LIPID_DISORDERS_10.)))
-	AND  DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND  DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -175,7 +176,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&CANCER_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&CANCER_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -191,7 +192,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&CANCER_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&CANCER_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -219,7 +220,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&LIVER_DISEASE_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&LIVER_DISEASE_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -235,7 +236,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&LIVER_DISEASE_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&LIVER_DISEASE_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -263,7 +264,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&PULMONARY_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&PULMONARY_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -279,7 +280,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&PULMONARY_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&PULMONARY_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -307,7 +308,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&CHF_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&CHF_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -323,7 +324,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&CHF_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&CHF_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 ;
@@ -351,7 +352,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&RETINOPATHY_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&RETINOPATHY_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -367,7 +368,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&RETINOPATHY_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&RETINOPATHY_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -395,7 +396,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&STROKE_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&STROKE_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -411,7 +412,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&STROKE_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&STROKE_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -439,7 +440,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&TIA_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&TIA_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -455,7 +456,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&TIA_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&TIA_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -490,7 +491,7 @@ WHERE (
 		OR
 	   (PX_TYPE= '09' AND compress(PX, '.') IN (&CAROTID_DISEASE_09.))
        )
-	AND PREX.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND PREX.ENC_TYPE in ('EI', 'IP')
+	AND PREX.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND PREX.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -510,7 +511,7 @@ WHERE (
 		OR
 	   (PX_TYPE= '09' AND compress(PX, '.') IN (&CAROTID_DISEASE_09.))
        )
-	AND PREX.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND PREX.ENC_TYPE IN ('AV', 'ED')
+	AND PREX.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND PREX.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -556,7 +557,7 @@ WHERE
 	 (DX_TYPE= '10P' AND compress(DX, '.') IN (&OBSTRUCT_CORONARY_10P.))
 	)
 )
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -589,7 +590,7 @@ WHERE
 	 (DX_TYPE= '10P' AND compress(DX, '.') IN (&OBSTRUCT_CORONARY_10P.))
 	)
 )
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 ;
@@ -633,7 +634,7 @@ WHERE
 	 (DX_TYPE= '09P' AND compress(DX, '.') IN (&PERIPHERAL_ARTERY_09P.))	  
 	)
 )
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -666,7 +667,7 @@ WHERE
                                  where upcase(CONCEPT) = 'PERIPHERAL_ARTERY' and codetype = DIAG.DX_TYPE)
 	)
 )
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 ;
@@ -694,7 +695,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&CARDIAC_VALVE_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&CARDIAC_VALVE_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI','IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI','IP')
 	;
 quit;
 
@@ -710,7 +711,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&CARDIAC_VALVE_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&CARDIAC_VALVE_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -736,7 +737,7 @@ WHERE
    ((DX_TYPE= '09' AND compress(DX, '.') IN (&ARR_COND_DISORDER_FLAG_09.))
 	 OR
 	(DX_TYPE= '10' AND compress(DX, '.') IN (&ARR_COND_DISORDER_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI','IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI','IP')
 	;
 quit;
 
@@ -753,7 +754,7 @@ WHERE
    ((DX_TYPE= '09' AND compress(DX, '.') IN (&ARR_COND_DISORDER_FLAG_09.))
 	 OR
 	(DX_TYPE= '10' AND compress(DX, '.') IN (&ARR_COND_DISORDER_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -782,7 +783,7 @@ WHERE
    ((DX_TYPE= '09' AND compress(DX, '.') IN (&AFIB_FLAG_09.))
 	 OR
 	(DX_TYPE= '10' AND compress(DX, '.') IN(&AFIB_FLAG_10)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -799,7 +800,7 @@ WHERE
     ((DX_TYPE= '09' AND compress(DX, '.') IN (&AFIB_FLAG_09.))
 	 OR
 	(DX_TYPE= '10' AND compress(DX, '.') IN(&AFIB_FLAG_10)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -827,7 +828,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&COPD_EMPH_ASTH_FLAG_09.))
 	   OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN(&COPD_EMPH_ASTH_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -843,7 +844,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&COPD_EMPH_ASTH_FLAG_09.))
 	   OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN(&COPD_EMPH_ASTH_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -871,7 +872,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&OXYGEN_THERAPY_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN(&OXYGEN_THERAPY_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -887,7 +888,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&OXYGEN_THERAPY_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN(&OXYGEN_THERAPY_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -915,7 +916,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&DEMENTIA_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&DEMENTIA_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -931,7 +932,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&DEMENTIA_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&DEMENTIA_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -951,7 +952,7 @@ FROM RCR_T2D_DEMO DEMO
 	 MED.RXNORM_CUI= RX.RXNORM_CUI
     JOIN indata.ENCOUNTER ENC ON ENC.ENCOUNTERID = RX.ENCOUNTERID
 WHERE
-    RX_ORDER_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND ENC.ENC_TYPE IN ('AV', 'ED', 'EI', 'IP', 'IC') 
+    RX_ORDER_DATE BETWEEN (T1-730) AND (T1-1) AND ENC.ENC_TYPE IN ('AV', 'ED', 'EI', 'IP', 'IC') 
 ;
 quit;
 
@@ -978,7 +979,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&SCHIZOPHRENIA_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&SCHIZOPHRENIA_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -994,7 +995,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&SCHIZOPHRENIA_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN(&SCHIZOPHRENIA_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -1023,7 +1024,7 @@ WHERE
   ((DX_TYPE= '09' AND compress(DX, '.') IN (&BIPOLAR_PSYCHO_09.))
 	OR
    (DX_TYPE= '10' AND compress(DX, '.') IN (&BIPOLAR_PSYCHO_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -1040,7 +1041,7 @@ WHERE
    ((DX_TYPE= '09' AND compress(DX, '.') IN (&BIPOLAR_PSYCHO_09.))
 	OR
    (DX_TYPE= '10' AND compress(DX, '.') IN (&BIPOLAR_PSYCHO_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -1068,7 +1069,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&PTSD_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&PTSD_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI','IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI','IP')
 	;
 quit;
 
@@ -1084,7 +1085,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&PTSD_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&PTSD_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -1112,7 +1113,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&DEPRESSION_FLAG_09.))
 		OR
 	   (DX_TYPE= '10' AND compress(DX, '.') IN (&DEPRESSION_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI', 'IP')
 	;
 quit;
 
@@ -1128,7 +1129,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&DEPRESSION_FLAG_09.))
 		OR
 	   (DX_TYPE= '10' AND compress(DX, '.') IN (&DEPRESSION_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -1156,7 +1157,7 @@ FROM RCR_T2D_DEMO DEMO  JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&PARKINSONS_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN (&PARKINSONS_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE in ('EI','IP')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE in ('EI','IP')
 	;
 quit;
 
@@ -1172,7 +1173,7 @@ FROM RCR_T2D_DEMO DEMO JOIN indata.DIAGNOSIS DIAG on demo.patid=diag.patid
 WHERE ((DX_TYPE= '09' AND compress(DX, '.') IN (&PARKINSONS_FLAG_09.))
 		OR
 	  (DX_TYPE= '10' AND compress(DX, '.') IN(&PARKINSONS_FLAG_10.)))
-	AND DIAG.ADMIT_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
+	AND DIAG.ADMIT_DATE BETWEEN (T1-730) AND (T1-1) AND DIAG.ENC_TYPE IN ('AV', 'ED')
 	
 GROUP BY 1
 	;
@@ -1191,7 +1192,7 @@ FROM RCR_T2D_DEMO DEMO
 	MED ON MED.RXNORM_CUI = RX.RXNORM_CUI
     JOIN indata.ENCOUNTER ENC ON ENC.ENCOUNTERID = RX.ENCOUNTERID
 WHERE
-    RX_ORDER_DATE BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) AND ENC.ENC_TYPE IN ('AV', 'ED', 'EI', 'IP', 'IC') 
+    RX_ORDER_DATE BETWEEN (T1-730) AND (T1-1) AND ENC.ENC_TYPE IN ('AV', 'ED', 'EI', 'IP', 'IC') 
 ;
 quit;
 
@@ -1300,7 +1301,7 @@ FROM dmlocal.T1712_SELECTED_CASES DEMO,
 	indata.ENCOUNTER ENC
 WHERE DEMO.PATID = ENC.PATID 
 AND ENC.ENC_TYPE IN ('IP', 'EI', 'ED', 'AV') 
-AND( ENC.ADMIT_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1))
+AND( ENC.ADMIT_DATE BETWEEN (T1-365) AND (T1-1))
 ORDER BY PATID, ADMIT_DATE, ENC_TYPE
 ;
 quit;
@@ -1325,7 +1326,7 @@ SELECT DISTINCT
 		
 FROM 
 	dmlocal.T1712_SELECTED_CASES DEMO JOIN dmtable.vital VIT on demo.patid=vit.patid
-WHERE VIT.MEASURE_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1)
+WHERE VIT.MEASURE_DATE BETWEEN (T1-365) AND (T1-1)
 ;
 quit;
 
@@ -1353,7 +1354,7 @@ SELECT DISTINCT
 		
 FROM 
 	dmlocal.T1712_SELECTED_CASES DEMO JOIN dmtable.VITAL VIT on demo.patid=vit.patid
-WHERE VIT.MEASURE_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1)
+WHERE VIT.MEASURE_DATE BETWEEN (T1-365) AND (T1-1)
 ;
 quit;
 
@@ -1400,7 +1401,7 @@ FROM
 	dmlocal.T1712_SELECTED_CASES DEMO
 	JOIN dmtable.vital VIT
 ON DEMO.PATID = VIT.PATID 
-WHERE (VIT.MEASURE_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1)) AND ( HT BETWEEN 48 AND 90)
+WHERE (VIT.MEASURE_DATE BETWEEN (T1-365) AND (T1-1)) AND ( HT BETWEEN 48 AND 90)
 GROUP BY DEMO.PATID;
 quit;
 
@@ -1414,7 +1415,7 @@ FROM
 	dmlocal.T1712_SELECTED_CASES DEMO
 	JOIN dmtable.VITAL VIT
 ON DEMO.PATID = VIT.PATID 
-WHERE (VIT.MEASURE_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1)) AND SMOKING is NOT NULL;
+WHERE (VIT.MEASURE_DATE BETWEEN (T1-365) AND (T1-1)) AND SMOKING is NOT NULL;
 quit;
 
 proc sort data=dmtable.VITAL_SMOKING;
@@ -1433,7 +1434,7 @@ export out the tab result
 */
 proc sql;
 CREATE TABLE dmtable.RCR_T2D_VITAL AS
-SELECT DISTINCT DEMO.PATID, INDEX_DATE
+SELECT DISTINCT DEMO.PATID, T1
 , HEIGHT, WEIGHT, WT_MEASURE_DATE
 , Median(DIASTOLIC_BP) AS DIASTOLIC_BP
 , Median(SYSTOLIC_BP) AS SYSTOLIC_BP
@@ -1464,7 +1465,7 @@ FROM
 	JOIN
 indata.LAB_RESULT_CM LAB on demo.patid=lab.patid
 WHERE lab.LAB_LOINC IN (&A1C_LOINC.)
-AND LAB.RESULT_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1)
+AND LAB.RESULT_DATE BETWEEN (T1-365) AND (T1-1)
 ;
 quit;
 
@@ -1509,7 +1510,7 @@ FROM
 	JOIN
 indata.LAB_RESULT_CM LAB on demo.patid=lab.patid
 WHERE LAB_LOINC IN (&LDL_LOINC.)
-AND LAB.RESULT_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1) 
+AND LAB.RESULT_DATE BETWEEN (T1-365) AND (T1-1) 
 ;
 quit;
 
@@ -1557,7 +1558,7 @@ indata.LAB_RESULT_CM LAB on demo.patid=lab.patid
 WHERE LAB_LOINC IN 
 (&CREATININE_LOINC.)
 AND lower(compress(RESULT_UNIT)) = 'mg/dl'
-AND LAB.RESULT_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1) 
+AND LAB.RESULT_DATE BETWEEN (T1-365) AND (T1-1) 
 ;
 quit;
 
@@ -1665,7 +1666,7 @@ DISTINCT
 FROM 
 		dmlocal.T1712_SELECTED_CASES DEMO
 			JOIN indata.PRESCRIBING RX on demo.patid=rx.patid 
- AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1)			
+ AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-730) AND (T1-1)			
 ;
 quit;
 
@@ -1758,7 +1759,7 @@ WHERE (ENC.ENC_TYPE ='AV'
 
  )
 
- AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1)
+ AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-730) AND (T1-1)
 
 	) X
 	GROUP BY 1
@@ -1825,7 +1826,7 @@ WHERE
 
  )
 
- AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1)
+ AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-730) AND (T1-1)
 ;
 quit;
 	
@@ -1932,7 +1933,7 @@ WHERE (ENC.ENC_TYPE ='AV'
 
  )
 
- AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-1) 
+ AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-730) AND (T1-1) 
 	
 	) X
 	GROUP BY 1
@@ -2015,7 +2016,7 @@ FROM
 		 		JOIN indata.ENCOUNTER ENC ON RX.ENCOUNTERID = ENC.ENCOUNTERID
 					JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 WHERE (ENC.ENC_TYPE ='AV' )
-    AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-90) AND (INDEX_DATE+90)
+    AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-90) AND (T1+90)
 	AND 
 	/* 1. metformin */
 	MEDS_FLAG IN('METFORMIN_FLAG')
@@ -2033,7 +2034,7 @@ FROM
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON  MED.RXNORM_CUI = RX.RXNORM_CUI
 
 WHERE (ENC.ENC_TYPE ='AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-90) AND (INDEX_DATE+90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-90) AND (T1+90)
 	AND MEDS_FLAG IN ('ALL_INSULIN_FLAG')
 	/* 2. anyinsulin*/
 	
@@ -2049,7 +2050,7 @@ FROM
 	 		JOIN indata.ENCOUNTER ENC ON RX.ENCOUNTERID = ENC.ENCOUNTERID
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 WHERE (ENC.ENC_TYPE ='AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-90) AND (INDEX_DATE+90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-90) AND (T1+90)
 	AND MEDS_FLAG IN (
 					'GLIPIZIDE_FLAG'
 					,'GLYBURIDE_FLAG'
@@ -2071,7 +2072,7 @@ FROM
 
 
 WHERE (ENC.ENC_TYPE ='AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-90) AND (INDEX_DATE+90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-90) AND (T1+90)
 	AND MEDS_FLAG IN ('METFORMIN_GLYBURIDE_FLAG') 
 
 UNION
@@ -2088,7 +2089,7 @@ FROM
 		
 
 WHERE (ENC.ENC_TYPE ='AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-90) AND (INDEX_DATE+90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-90) AND (T1+90)
 	AND MEDS_FLAG IN ('METFORMIN_GLIPIZIDE_FLAG') 
 					
 UNION 
@@ -2103,7 +2104,7 @@ FROM
 	 		JOIN indata.ENCOUNTER ENC ON RX.ENCOUNTERID = ENC.ENCOUNTERID
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 WHERE (ENC.ENC_TYPE ='AV' )
-    AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-90) AND (INDEX_DATE+90)
+    AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-90) AND (T1+90)
 	AND MEDS_FLAG IN	(
 					'GLIM_TZD_PIOG_FLAG'
 					,'GLIM_TZD_ROSI_FLAG'
@@ -2129,7 +2130,7 @@ FROM
 		 	JOIN indata.ENCOUNTER ENC ON RX.ENCOUNTERID = ENC.ENCOUNTERID
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 WHERE (ENC.ENC_TYPE ='AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-90) AND (INDEX_DATE+90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-90) AND (T1+90)
 	AND MEDS_FLAG IN	('DPP4_LINAGLIPTIN_FLAG',
                          'DPP4_ALOGLITPIN_FLAG' ,
                          'METFORMIN_DPP4_ALOGLIPTIN_FLAG',
@@ -2156,7 +2157,7 @@ FROM
 	 		JOIN indata.ENCOUNTER ENC ON RX.ENCOUNTERID = ENC.ENCOUNTERID
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 WHERE (ENC.ENC_TYPE ='AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-90) AND (INDEX_DATE+90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-90) AND (T1+90)
 	AND MEDS_FLAG IN ('GLP1_EXENATIDE_FLAG','GLP1_LIRAGLUTIDE_FLAG') 
 	/* 6. GLP1 */
 	
@@ -2173,7 +2174,7 @@ FROM
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 
 WHERE (ENC.ENC_TYPE ='AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-90) AND (INDEX_DATE+90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-90) AND (T1+90)
 	AND MEDS_FLAG IN ('DPP4_LINA_SGLT2_EMPA_FLAG'
 					,'METFORMIN_SGLT2_CANA_FLAG'
 					,'METFORMIN_SGLT2_DAPA_FLAG'
@@ -2197,7 +2198,7 @@ FROM
 	 		JOIN indata.ENCOUNTER ENC ON RX.ENCOUNTERID = ENC.ENCOUNTERID
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 WHERE (ENC.ENC_TYPE ='AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-90) AND (INDEX_DATE+90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-90) AND (T1+90)
 	AND MEDS_FLAG IN	
 		(
 			 'ALPHA_GLUC_INHIB_FLAG'
@@ -2344,20 +2345,20 @@ WHERE (ENC.ENC_TYPE ='AV' )
 BETWEEN 
 case
 when 
-intnx('month',INDEX_DATE+1,0,"s")<> intnx('month',INDEX_DATE+1,0,"e")
+intnx('month',T1+1,0,"s")<> intnx('month',T1+1,0,"e")
 then
-intnx('month',INDEX_DATE+1,0,"s")
+intnx('month',T1+1,0,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE+1,0,"s")),day(intnx('month',INDEX_DATE+1,0,"s")),year(intnx('month',INDEX_DATE+1,0,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1+1,0,"s")),day(intnx('month',T1+1,0,"s")),year(intnx('month',T1+1,0,"s"))),0,"e")
 end 
 AND 
 case
 when 
-intnx('month',INDEX_DATE,0,"s")<> intnx('month',INDEX_DATE,0,"e")
+intnx('month',T1,0,"s")<> intnx('month',T1,0,"e")
 then
-intnx('month',INDEX_DATE,12,"s")
+intnx('month',T1,12,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE,12,"s")),day(intnx('month',INDEX_DATE,12,"s")),year(intnx('month',INDEX_DATE,12,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1,12,"s")),day(intnx('month',T1,12,"s")),year(intnx('month',T1,12,"s"))),0,"e")
 end 
 	AND 
 	/* 1. metformin */
@@ -2381,20 +2382,20 @@ WHERE (ENC.ENC_TYPE ='AV' )
 BETWEEN 
 case
 when 
-intnx('month',INDEX_DATE+1,0,"s")<> intnx('month',INDEX_DATE+1,0,"e")
+intnx('month',T1+1,0,"s")<> intnx('month',T1+1,0,"e")
 then
-intnx('month',INDEX_DATE+1,0,"s")
+intnx('month',T1+1,0,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE+1,0,"s")),day(intnx('month',INDEX_DATE+1,0,"s")),year(intnx('month',INDEX_DATE+1,0,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1+1,0,"s")),day(intnx('month',T1+1,0,"s")),year(intnx('month',T1+1,0,"s"))),0,"e")
 end 
 AND 
 case
 when 
-intnx('month',INDEX_DATE,0,"s")<> intnx('month',INDEX_DATE,0,"e")
+intnx('month',T1,0,"s")<> intnx('month',T1,0,"e")
 then
-intnx('month',INDEX_DATE,12,"s")
+intnx('month',T1,12,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE,12,"s")),day(intnx('month',INDEX_DATE,12,"s")),year(intnx('month',INDEX_DATE,12,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1,12,"s")),day(intnx('month',T1,12,"s")),year(intnx('month',T1,12,"s"))),0,"e")
 end 
 	AND MEDS_FLAG IN ('ALL_INSULIN_FLAG')
 	/* 2. anyinsulin */
@@ -2416,20 +2417,20 @@ WHERE (ENC.ENC_TYPE ='AV' )
 BETWEEN 
 case
 when 
-intnx('month',INDEX_DATE+1,0,"s")<> intnx('month',INDEX_DATE+1,0,"e")
+intnx('month',T1+1,0,"s")<> intnx('month',T1+1,0,"e")
 then
-intnx('month',INDEX_DATE+1,0,"s")
+intnx('month',T1+1,0,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE+1,0,"s")),day(intnx('month',INDEX_DATE+1,0,"s")),year(intnx('month',INDEX_DATE+1,0,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1+1,0,"s")),day(intnx('month',T1+1,0,"s")),year(intnx('month',T1+1,0,"s"))),0,"e")
 end 
 AND 
 case
 when 
-intnx('month',INDEX_DATE,0,"s")<> intnx('month',INDEX_DATE,0,"e")
+intnx('month',T1,0,"s")<> intnx('month',T1,0,"e")
 then
-intnx('month',INDEX_DATE,12,"s")
+intnx('month',T1,12,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE,12,"s")),day(intnx('month',INDEX_DATE,12,"s")),year(intnx('month',INDEX_DATE,12,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1,12,"s")),day(intnx('month',T1,12,"s")),year(intnx('month',T1,12,"s"))),0,"e")
 end 
 	AND MEDS_FLAG IN (
 					'GLIPIZIDE_FLAG'
@@ -2457,20 +2458,20 @@ WHERE (ENC.ENC_TYPE ='AV' )
 BETWEEN 
 case
 when 
-intnx('month',INDEX_DATE+1,0,"s")<> intnx('month',INDEX_DATE+1,0,"e")
+intnx('month',T1+1,0,"s")<> intnx('month',T1+1,0,"e")
 then
-intnx('month',INDEX_DATE+1,0,"s")
+intnx('month',T1+1,0,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE+1,0,"s")),day(intnx('month',INDEX_DATE+1,0,"s")),year(intnx('month',INDEX_DATE+1,0,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1+1,0,"s")),day(intnx('month',T1+1,0,"s")),year(intnx('month',T1+1,0,"s"))),0,"e")
 end 
 AND 
 case
 when 
-intnx('month',INDEX_DATE,0,"s")<> intnx('month',INDEX_DATE,0,"e")
+intnx('month',T1,0,"s")<> intnx('month',T1,0,"e")
 then
-intnx('month',INDEX_DATE,12,"s")
+intnx('month',T1,12,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE,12,"s")),day(intnx('month',INDEX_DATE,12,"s")),year(intnx('month',INDEX_DATE,12,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1,12,"s")),day(intnx('month',T1,12,"s")),year(intnx('month',T1,12,"s"))),0,"e")
 end 
 	AND MEDS_FLAG IN ('METFORMIN_GLYBURIDE_FLAG') 
 
@@ -2492,20 +2493,20 @@ AND coalesce(RX_ORDER_DATE,RX_START_DATE )
 BETWEEN 
 case
 when 
-intnx('month',INDEX_DATE+1,0,"s")<> intnx('month',INDEX_DATE+1,0,"e")
+intnx('month',T1+1,0,"s")<> intnx('month',T1+1,0,"e")
 then
-intnx('month',INDEX_DATE+1,0,"s")
+intnx('month',T1+1,0,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE+1,0,"s")),day(intnx('month',INDEX_DATE+1,0,"s")),year(intnx('month',INDEX_DATE+1,0,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1+1,0,"s")),day(intnx('month',T1+1,0,"s")),year(intnx('month',T1+1,0,"s"))),0,"e")
 end 
 AND 
 case
 when 
-intnx('month',INDEX_DATE,0,"s")<> intnx('month',INDEX_DATE,0,"e")
+intnx('month',T1,0,"s")<> intnx('month',T1,0,"e")
 then
-intnx('month',INDEX_DATE,12,"s")
+intnx('month',T1,12,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE,12,"s")),day(intnx('month',INDEX_DATE,12,"s")),year(intnx('month',INDEX_DATE,12,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1,12,"s")),day(intnx('month',T1,12,"s")),year(intnx('month',T1,12,"s"))),0,"e")
 end 
 	AND MEDS_FLAG IN ('METFORMIN_GLIPIZIDE_FLAG') 
 
@@ -2527,20 +2528,20 @@ WHERE (ENC.ENC_TYPE ='AV' )
 BETWEEN 
 case
 when 
-intnx('month',INDEX_DATE+1,0,"s")<> intnx('month',INDEX_DATE+1,0,"e")
+intnx('month',T1+1,0,"s")<> intnx('month',T1+1,0,"e")
 then
-intnx('month',INDEX_DATE+1,0,"s")
+intnx('month',T1+1,0,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE+1,0,"s")),day(intnx('month',INDEX_DATE+1,0,"s")),year(intnx('month',INDEX_DATE+1,0,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1+1,0,"s")),day(intnx('month',T1+1,0,"s")),year(intnx('month',T1+1,0,"s"))),0,"e")
 end 
 AND 
 case
 when 
-intnx('month',INDEX_DATE,0,"s")<> intnx('month',INDEX_DATE,0,"e")
+intnx('month',T1,0,"s")<> intnx('month',T1,0,"e")
 then
-intnx('month',INDEX_DATE,12,"s")
+intnx('month',T1,12,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE,12,"s")),day(intnx('month',INDEX_DATE,12,"s")),year(intnx('month',INDEX_DATE,12,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1,12,"s")),day(intnx('month',T1,12,"s")),year(intnx('month',T1,12,"s"))),0,"e")
 end 
 	AND MEDS_FLAG IN	(
 					'GLIM_TZD_PIOG_FLAG'
@@ -2571,20 +2572,20 @@ WHERE (ENC.ENC_TYPE ='AV' )
 BETWEEN 
 case
 when 
-intnx('month',INDEX_DATE+1,0,"s")<> intnx('month',INDEX_DATE+1,0,"e")
+intnx('month',T1+1,0,"s")<> intnx('month',T1+1,0,"e")
 then
-intnx('month',INDEX_DATE+1,0,"s")
+intnx('month',T1+1,0,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE+1,0,"s")),day(intnx('month',INDEX_DATE+1,0,"s")),year(intnx('month',INDEX_DATE+1,0,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1+1,0,"s")),day(intnx('month',T1+1,0,"s")),year(intnx('month',T1+1,0,"s"))),0,"e")
 end 
 AND 
 case
 when 
-intnx('month',INDEX_DATE,0,"s")<> intnx('month',INDEX_DATE,0,"e")
+intnx('month',T1,0,"s")<> intnx('month',T1,0,"e")
 then
-intnx('month',INDEX_DATE,12,"s")
+intnx('month',T1,12,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE,12,"s")),day(intnx('month',INDEX_DATE,12,"s")),year(intnx('month',INDEX_DATE,12,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1,12,"s")),day(intnx('month',T1,12,"s")),year(intnx('month',T1,12,"s"))),0,"e")
 end 
 	AND MEDS_FLAG IN	('DPP4_LINAGLIPTIN_FLAG'
                         ,'DPP4_ALOGLITPIN_FLAG' 
@@ -2615,20 +2616,20 @@ WHERE (ENC.ENC_TYPE ='AV' )
 BETWEEN 
 case
 when 
-intnx('month',INDEX_DATE+1,0,"s")<> intnx('month',INDEX_DATE+1,0,"e")
+intnx('month',T1+1,0,"s")<> intnx('month',T1+1,0,"e")
 then
-intnx('month',INDEX_DATE+1,0,"s")
+intnx('month',T1+1,0,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE+1,0,"s")),day(intnx('month',INDEX_DATE+1,0,"s")),year(intnx('month',INDEX_DATE+1,0,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1+1,0,"s")),day(intnx('month',T1+1,0,"s")),year(intnx('month',T1+1,0,"s"))),0,"e")
 end 
 AND 
 case
 when 
-intnx('month',INDEX_DATE,0,"s")<> intnx('month',INDEX_DATE,0,"e")
+intnx('month',T1,0,"s")<> intnx('month',T1,0,"e")
 then
-intnx('month',INDEX_DATE,12,"s")
+intnx('month',T1,12,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE,12,"s")),day(intnx('month',INDEX_DATE,12,"s")),year(intnx('month',INDEX_DATE,12,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1,12,"s")),day(intnx('month',T1,12,"s")),year(intnx('month',T1,12,"s"))),0,"e")
 end 
 	AND MEDS_FLAG IN ('GLP1_EXENATIDE_FLAG','GLP1_LIRAGLUTIDE_FLAG') 
 	/* 6. GLP1 */
@@ -2649,20 +2650,20 @@ WHERE (ENC.ENC_TYPE = 'AV' )
 BETWEEN 
 case
 when 
-intnx('month',INDEX_DATE+1,0,"s")<> intnx('month',INDEX_DATE+1,0,"e")
+intnx('month',T1+1,0,"s")<> intnx('month',T1+1,0,"e")
 then
-intnx('month',INDEX_DATE+1,0,"s")
+intnx('month',T1+1,0,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE+1,0,"s")),day(intnx('month',INDEX_DATE+1,0,"s")),year(intnx('month',INDEX_DATE+1,0,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1+1,0,"s")),day(intnx('month',T1+1,0,"s")),year(intnx('month',T1+1,0,"s"))),0,"e")
 end 
 AND 
 case
 when 
-intnx('month',INDEX_DATE,0,"s")<> intnx('month',INDEX_DATE,0,"e")
+intnx('month',T1,0,"s")<> intnx('month',T1,0,"e")
 then
-intnx('month',INDEX_DATE,12,"s")
+intnx('month',T1,12,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE,12,"s")),day(intnx('month',INDEX_DATE,12,"s")),year(intnx('month',INDEX_DATE,12,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1,12,"s")),day(intnx('month',T1,12,"s")),year(intnx('month',T1,12,"s"))),0,"e")
 end 
 	AND MEDS_FLAG IN ('DPP4_LINA_SGLT2_EMPA_FLAG'
 					,'METFORMIN_SGLT2_CANA_FLAG'
@@ -2690,20 +2691,20 @@ WHERE (ENC.ENC_TYPE = 'AV' )
 BETWEEN 
 case
 when 
-intnx('month',INDEX_DATE+1,0,"s")<> intnx('month',INDEX_DATE+1,0,"e")
+intnx('month',T1+1,0,"s")<> intnx('month',T1+1,0,"e")
 then
-intnx('month',INDEX_DATE+1,0,"s")
+intnx('month',T1+1,0,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE+1,0,"s")),day(intnx('month',INDEX_DATE+1,0,"s")),year(intnx('month',INDEX_DATE+1,0,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1+1,0,"s")),day(intnx('month',T1+1,0,"s")),year(intnx('month',T1+1,0,"s"))),0,"e")
 end 
 AND 
 case
 when 
-intnx('month',INDEX_DATE,0,"s")<> intnx('month',INDEX_DATE,0,"e")
+intnx('month',T1,0,"s")<> intnx('month',T1,0,"e")
 then
-intnx('month',INDEX_DATE,12,"s")
+intnx('month',T1,12,"s")
 else
-intnx('month',mdy(month(intnx('month',INDEX_DATE,12,"s")),day(intnx('month',INDEX_DATE,12,"s")),year(intnx('month',INDEX_DATE,12,"s"))),0,"e")
+intnx('month',mdy(month(intnx('month',T1,12,"s")),day(intnx('month',T1,12,"s")),year(intnx('month',T1,12,"s"))),0,"e")
 end 
 	AND MEDS_FLAG IN	
 			('ALPHA_GLUC_INHIB_FLAG'
@@ -2884,7 +2885,7 @@ FROM
 		 		JOIN indata.ENCOUNTER ENC ON RX.ENCOUNTERID = ENC.ENCOUNTERID
 					JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 WHERE (ENC.ENC_TYPE = 'AV' )
-    AND coalesce(RX_ORDER_DATE,RX_START_DATE ) BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-90)
+    AND coalesce(RX_ORDER_DATE,RX_START_DATE ) BETWEEN (T1-730) AND (T1-90)
 	AND 
 	/* 1. metformin */
 	MEDS_FLAG IN ('METFORMIN_FLAG')
@@ -2902,7 +2903,7 @@ FROM
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 
 WHERE (ENC.ENC_TYPE ='AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-730) AND (T1-90)
 	AND MEDS_FLAG IN ('ALL_INSULIN_FLAG')
 	/* 2. anyinsulin */
 	
@@ -2918,7 +2919,7 @@ FROM
 	 		JOIN indata.ENCOUNTER ENC ON RX.ENCOUNTERID = ENC.ENCOUNTERID
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 WHERE (ENC.ENC_TYPE ='AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-730) AND (T1-90)
 	AND MEDS_FLAG IN ('GLIPIZIDE_FLAG'
 					,'GLYBURIDE_FLAG'
 					,'GLIMEPERIDE_FLAG'
@@ -2938,7 +2939,7 @@ FROM
 		 	JOIN indata.ENCOUNTER ENC ON RX.ENCOUNTERID = ENC.ENCOUNTERID
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON   MED.RXNORM_CUI = RX.RXNORM_CUI
 WHERE (ENC.ENC_TYPE = 'AV' )
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-730) AND (T1-90)
 	AND MEDS_FLAG IN	('DPP4_LINAGLIPTIN_FLAG'
                         ,'DPP4_ALOGLITPIN_FLAG' 
                         ,'METFORMIN_DPP4_ALOGLIPTIN_FLAG'
@@ -2965,7 +2966,7 @@ FROM
 	 		JOIN indata.ENCOUNTER ENC ON RX.ENCOUNTERID = ENC.ENCOUNTERID
 				JOIN infolder.RCRT2D_MED_rxnorm MED ON  MED.RXNORM_CUI = RX.RXNORM_CUI
 WHERE ENC.ENC_TYPE = 'AV'
-	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (INDEX_DATE-730) AND (INDEX_DATE-90)
+	AND coalesce(RX_ORDER_DATE,RX_START_DATE )  BETWEEN (T1-730) AND (T1-90)
 	AND MEDS_FLAG IN ('GLP1_EXENATIDE_FLAG','GLP1_LIRAGLUTIDE_FLAG') 
 	/* 6. GLP1 */
 ;
@@ -2997,8 +2998,8 @@ proc sql;
 CREATE TABLE dmtable.RCR_T2D_FINAL_DEMO_MED_GRP AS
  SELECT 
  DISTINCT DEMO.PATID
- , round(yrdif(BIRTH_DATE,INDEX_DATE,'AGE')) as AGE_
- , year(INDEX_DATE)AS COHORT_ENTRY_YEAR
+ , round(yrdif(BIRTH_DATE,T1,'AGE')) as AGE_
+ , year(T1)AS COHORT_ENTRY_YEAR
  , D.RACE
  , D.HISPANIC
  , MED.MEDS_FLAG
@@ -3042,7 +3043,7 @@ FROM dmlocal.T1712_SELECTED_CASES DEMO,
 	indata.ENCOUNTER ENC
 WHERE DEMO.PATID = ENC.PATID 
 AND ENC.ENC_TYPE IN ('IP', 'EI', 'ED', 'AV') 
-AND ( ENC.ADMIT_DATE BETWEEN (INDEX_DATE-365) AND (INDEX_DATE-1))
+AND ( ENC.ADMIT_DATE BETWEEN (T1-365) AND (T1-1))
 
 ) AD on d.patid=ad.patid
 GROUP BY 1
