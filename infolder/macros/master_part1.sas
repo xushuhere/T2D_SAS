@@ -69,7 +69,7 @@ SELECT DIAG_ICD.PATID
                     WHERE 
                     (  
                  
-                    RXNORM_CUI IN (SELECT RXNORM_CUI FROM infolder.RCRT2D_MED_RXNORM)
+                    RXNORM_CUI IN (SELECT RXNORM_CUI FROM infolder.RCRT2D_MED_RXNORM_UPDATED)  /* Updated July 2020 */
 					)
                     AND ENC.ENC_TYPE = 'AV' 
 
@@ -167,7 +167,7 @@ quit;
 proc datasets library=work nolist; delete temp:; quit;
 
 proc sql;
-create table temp1 as
+create table dmlocal.temp1 as
 SELECT
 	 DISTINCT C3_1Y.*
 FROM
@@ -220,6 +220,11 @@ end
 )
 ;
 quit;
+
+/*Testing Temp1*/
+Data temp1;
+set dmlocal.temp1;
+run;
 
 proc sort data=temp1;
 by patid index_date;
@@ -469,7 +474,7 @@ SELECT DISTINCT MED.PATID
 						  	AND RX.PATID NOT IN(SELECT PATID FROM dmlocal.T1712_RCRT2D_COUNT7) 
 						    AND 
                             (
-                            RXNORM_CUI IN (SELECT RXNORM_CUI FROM infolder.RCRT2D_MED_RXNORM)
+                            RXNORM_CUI IN (SELECT RXNORM_CUI FROM infolder.RCRT2D_MED_RXNORM_UPDATED) /* Updated July 2020 */
                             ) 
                             AND ENC.ENC_TYPE ='AV' 
 							AND (RX_ORDER_DATE BETWEEN &query_from AND &query_to)
@@ -671,21 +676,21 @@ ORDER BY COUNTS_NAME
 ;
 quit;
 
-data count4;
+data dmlocal.count4;
 set dmlocal.T1712_RCRT2D_COUNT4;
 case_type=1;
 run;
 
 PROC SQL;
-CREATE TABLE count_4 AS 
+CREATE TABLE dmlocal.count_4 AS 
  SELECT PATID, ENCOUNTERID, ENC_TYPE, INDEX_DATE, T1 , RXNORM_CUI , MEDICATION, ICD_CODE, CASE_TYPE
  FROM 
 (
-SELECT RX.PATID, MIN(RX.RX_ORDER_DATE) AS T1 FORMAT=DATE9., RX.RXNORM_CUI, RX.ENCOUNTERID, CNT.INDEX_DATE, CNT.MEDICATION, CNT.ICD_CODE, CNT.ENC_TYPE
-			FROM PRESCRIBING RX  
-      INNER JOIN COUNT4 CNT
+SELECT RX.PATID, MIN(RX.RX_ORDER_DATE) AS T1 FORMAT=DATE9., RX.RXNORM_CUI, RX.ENCOUNTERID, CNT.INDEX_DATE, CNT.MEDICATION, CNT.ICD_CODE, CNT.ENC_TYPE, CNT.CASE_TYPE
+			FROM indata.PRESCRIBING RX  
+      INNER JOIN dmlocal.count4 CNT
       ON RX.PATID = CNT.PATID
-         WHERE RXNORM_CUI IN (&RXNORM)
+         WHERE RXNORM_CUI IN (SELECT RXNORM_CUI FROM infolder.RCRT2D_MED_RXNORM)
          AND RX_ORDER_DATE BETWEEN &query_from AND &query_to
 		     AND INDEX_DATE <= RX_ORDER_DATE
       GROUP BY RX.PATID  
@@ -693,66 +698,68 @@ SELECT RX.PATID, MIN(RX.RX_ORDER_DATE) AS T1 FORMAT=DATE9., RX.RXNORM_CUI, RX.EN
 QUIT;
 
 
-data count7;
+data dmlocal.count7;
 set dmlocal.T1712_RCRT2D_COUNT7;
 case_type=2;
 run;
 
 PROC SQL;
-CREATE TABLE count_7 AS 
+CREATE TABLE dmlocal.count_7 AS 
  SELECT PATID, ENCOUNTERID, ENC_TYPE, INDEX_DATE, T1 , RXNORM_CUI , ICD_CODE, LAB_VALUE, CASE_TYPE
  FROM 
 (
-SELECT RX.PATID, MIN(RX.RX_ORDER_DATE) AS T1 FORMAT=DATE9., RX.RXNORM_CUI, RX.ENCOUNTERID, CNT.INDEX_DATE, CNT.LAB_VALUE, CNT.ICD_CODE, CNT.ENC_TYPE
-			FROM PRESCRIBING RX  
-      INNER JOIN COUNT7 CNT
+SELECT RX.PATID, MIN(RX.RX_ORDER_DATE) AS T1 FORMAT=DATE9., RX.RXNORM_CUI, RX.ENCOUNTERID, CNT.INDEX_DATE, CNT.LAB_VALUE, CNT.ICD_CODE, CNT.ENC_TYPE, CNT.CASE_TYPE
+			FROM indata.PRESCRIBING RX  
+      INNER JOIN dmlocal.count7 CNT
       ON RX.PATID = CNT.PATID
-         WHERE RXNORM_CUI IN (&RXNORM)
+         WHERE RXNORM_CUI IN (SELECT RXNORM_CUI FROM infolder.RCRT2D_MED_RXNORM)
          AND RX_ORDER_DATE BETWEEN &query_from AND &query_to
 		     AND INDEX_DATE <= RX_ORDER_DATE
       GROUP BY RX.PATID  
 ) ;
 QUIT;
 
-data count10;
+data dmlocal.count10;
 set dmlocal.T1712_RCRT2D_COUNT10;
 case_type=3;
 run;
 
 PROC SQL;
-CREATE TABLE count_10 AS 
+CREATE TABLE dmlocal.count_10 AS 
  SELECT PATID, ENCOUNTERID, ENC_TYPE, INDEX_DATE, T1 , RXNORM_CUI , MEDICATION, LAB_VALUE, CASE_TYPE
  FROM 
 (
-SELECT RX.PATID, MIN(RX.RX_ORDER_DATE) AS T1 FORMAT=DATE9., RX.RXNORM_CUI, RX.ENCOUNTERID, CNT.INDEX_DATE, CNT.LAB_VALUE, CNT.MEDICATION, CNT.ENC_TYPE
-			FROM PRESCRIBING RX  
-      INNER JOIN COUNT10 CNT
+SELECT RX.PATID, MIN(RX.RX_ORDER_DATE) AS T1 FORMAT=DATE9., RX.RXNORM_CUI, RX.ENCOUNTERID, CNT.INDEX_DATE, CNT.LAB_VALUE, CNT.MEDICATION, CNT.ENC_TYPE, CNT.CASE_TYPE
+			FROM indata.PRESCRIBING RX  
+      INNER JOIN dmlocal.count10 CNT
       ON RX.PATID = CNT.PATID
-         WHERE RXNORM_CUI IN (&RXNORM)
+         WHERE RXNORM_CUI IN (SELECT RXNORM_CUI FROM infolder.RCRT2D_MED_RXNORM)
          AND RX_ORDER_DATE BETWEEN &query_from AND &query_to
 		     AND INDEX_DATE <= RX_ORDER_DATE
       GROUP BY RX.PATID  
 ) ;
 QUIT;
 
-data count_all;
-set count_4 count_7 count_10;
+data dmlocal.count_all;
+set dmlocal.count_4 dmlocal.count_7 dmlocal.count_10;
 run;
 
-PROC SORT DATA=COUNT_ALL;
+/*
+PROC SORT DATA=dmlocal.count_all;
 	 BY PATID ENCOUNTERID;
-	 
-DATA COUNT_X;
-	 SET COUNT_ALL;
+run;
+
+DATA dmlocal.COUNT_X;
+	 SET dmlocal.count_all;
 	 BY PATID;
-	 IF FIRST.PATID THEN OUTPUT;
-RUN; 
+RUN;
+*/
 
 proc sql;
 CREATE TABLE dmlocal.T1712_SELECTED_CASES AS
-SELECT PATID, ENCOUNTERID, INDEX_DATE, T1, ENC_TYPE, CASE_TYPE
+SELECT PATID, ENCOUNTERID, INDEX_DATE, ENC_TYPE, CASE_TYPE, T1
 FROM
-COUNT_X 
+dmlocal.count_all
 ;
 quit;
 
@@ -797,7 +804,7 @@ SELECT RX2.PATID, RX2.RX_ORDER_DATE,INDEX_DATE
 										ON RX.ENCOUNTERID = ENC.ENCOUNTERID 
 										WHERE 
                                         (
-                                         RXNORM_CUI IN (SELECT RXNORM_CUI FROM infolder.RCRT2D_MED_RXNORM)
+                                         RXNORM_CUI IN (SELECT RXNORM_CUI FROM infolder.RCRT2D_MED_RXNORM_UPDATED) /* Updated July 2020 */
                                         )  
                                         AND ENC.ENC_TYPE ='AV' 
 
@@ -862,7 +869,7 @@ proc datasets library=dmlocal nolist; delete case_rx case_lab case_icd; quit;
 
 proc sql;
 CREATE TABLE dmlocal.T1712_SELECTED_CASES_DEMO AS
-SELECT CAS.PATID,  DEMO.SEX, DEMO.BIRTH_DATE as DOB, CAS.CASE_TYPE, CAS.T1,
+SELECT CAS.PATID, DEMO.SEX, DEMO.BIRTH_DATE as DOB, CAS.CASE_TYPE, CAS.T1,
  CASE WHEN CAS.PATID IN 
       (select distinct patid from temp)
       THEN 0 
