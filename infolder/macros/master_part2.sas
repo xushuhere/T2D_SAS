@@ -3539,6 +3539,8 @@ TABLE
 		GLP1_730= 'N patients remain on GLP1 from -730 to -90' * SUM='' *f=threshold.
 		ANYINSULIN_730= 'N patients remain on ANYINSULIN from -730 to -90' * SUM='' *f=threshold.
 		AGE_='Age at time of Qualifying Index Date' * (Median qrange='IQR')
+		AGE_='25th Percentiles of AGE' * p25
+    AGE_='75th Percentiles of AGE' * p75
 		MALE='Male' * SUM='' *f=threshold.
         FEMALE='Female' * SUM='' *f=threshold.
         SEX_OTHER='Sex - Other' * SUM='' *f=threshold.
