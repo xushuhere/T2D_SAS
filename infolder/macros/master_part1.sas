@@ -167,7 +167,7 @@ quit;
 proc datasets library=work nolist; delete temp:; quit;
 
 proc sql;
-create table dmlocal.temp1 as
+create table temp1 as
 SELECT
 	 DISTINCT C3_1Y.*
 FROM
@@ -220,11 +220,6 @@ end
 )
 ;
 quit;
-
-/*Testing Temp1*/
-Data temp1;
-set dmlocal.temp1;
-run;
 
 proc sort data=temp1;
 by patid index_date;
@@ -741,17 +736,6 @@ data dmlocal.count_all;
 set dmlocal.count_4 dmlocal.count_7 dmlocal.count_10;
 run;
 
-/*
-PROC SORT DATA=dmlocal.count_all;
-	 BY PATID ENCOUNTERID;
-run;
-
-DATA dmlocal.COUNT_X;
-	 SET dmlocal.count_all;
-	 BY PATID;
-RUN;
-*/
-
 proc sql;
 CREATE TABLE dmlocal.T1712_SELECTED_CASES AS
 SELECT PATID, ENCOUNTERID, INDEX_DATE, ENC_TYPE, CASE_TYPE, T1
@@ -917,5 +901,3 @@ ODS Listing CLOSE;
 
 proc printto;
 run;
-
-
